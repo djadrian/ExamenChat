@@ -1,0 +1,135 @@
+<html>
+  <head>
+      <title>Xprin User Blog</title>
+     
+  </head>
+
+ <body>
+
+
+
+<div class="a1">
+<div class="errormsg"></div>
+Username:<input type="text" class="form-control box username" placeholder="username..." >
+<br><button class=" glyphicon glyphicon-send btn" type="button">ok</button>
+</div>
+
+<div class="a2" style="display:none">
+  <div style="height: 200px; width:200px; box-shadow:1px 1px 1px 1px gray; overflow:auto;" class="allmsg"></div>
+
+  <div style="background:red ; height: 200px; width:200px; color: black; box-shadow:1px 1px 1px 1px gray; overflow:auto;" class="privmsg"></div>
+  <div class="msg_ma_error"></div>
+  <div class="usersnow" style="float: right;"></div>
+  <div>
+    <form class="form-my">
+      To:<input type="text" class="to">
+      Message<input type="text" class="msg_box" placeholder="message...." >
+      <input type="submit" value="send">
+    </form>
+  </div>
+</div>
+
+
+
+ </body>
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<script  src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.1/socket.io.js"></script>
+ <script type="text/javascript">
+var socket = io.connect('http://10.6.2.46:3000');
+
+
+$('.btn').click(function() {
+  var txt = $('.box').val();
+  if ($.trim(txt) == '') {
+     $('.errormsg').text('Please Enter Username');
+  } else {
+     socket.emit('New_user',txt ,function(data) {
+        if (data) {
+         $('.a1').hide();
+         $('.a2').show();
+        } else {
+          $('.errormsg').text('Sorry User Already Exists;');
+        }
+     });
+     $('.box').val('');
+  }
+});
+
+socket.on('all_users',function(data) {
+    $('.usersnow').html(data);
+});
+
+socket.on('snd_mg',function(data) {
+    $('.allmsg').append(data + '<br>');
+});
+
+socket.on('call',function(data) {
+    $('.privmsg').append(data + '<br>');
+});
+
+
+socket.on('eva',function(data) {
+    $('.msg_ma_error').html(data + '<br>');
+});
+
+
+$('.form-my').submit(function (e){
+    e.preventDefault();
+    var msg = $('.msg_box').val(),
+        to = $('.to').val(),
+        msg1 = msg+'$'+to;
+      if ($.trim(msg) !== '' || $.trim(to) !== '') {
+
+        var mensaje = $(".msg_box").val();
+        var nick = $(".username").val();
+        var pm = $.trim(to) !== '';
+        var para = $.trim(to);
+
+        /*  $.post('http://localhost:3000/api/mensaje', {
+      "nick": nick,
+      "mensaje": mensaje,
+      "pm": pm,
+      "para": para
+    }, function(serverResponse){
+      //alert(serverResponse);
+    //do what you want with server response
+
+    });*/
+
+         socket.emit('msg_k',msg1,function(data) {
+        $('.msg_ma_error').html(data);
+      });
+
+      event = false;
+      socket.emit('stop_ray',event);
+
+      $('.msg_box').val('');
+      $('.to').val('');
+    }
+})
+
+var timeout;
+var event;
+
+
+
+$('.msg_box').keyup(function() {
+    var val = $(this).val();
+    if (val.length >= 0.5) {
+      event = true;
+      socket.emit('typing_ray',event);
+    }else{
+      event = false;
+      socket.emit('stop_ray',event);
+    }
+
+    
+});
+
+
+
+ </script>
+ 
+
+</html>
+
